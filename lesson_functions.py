@@ -4,9 +4,11 @@ import glob
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+from sklearn.svm import LinearSVC
 from skimage.feature import hog
 from scipy.ndimage.measurements import label
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 def convert_color(img, conv='RGB2YCrCb'):
     if conv == 'RGB2YCrCb':
@@ -15,6 +17,40 @@ def convert_color(img, conv='RGB2YCrCb'):
         return cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
     if conv == 'RGB2LUV':
         return cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
+    
+def read_images(folders, file, cars_temp = None, notcars_temp = None):
+    if (cars_temp == None):
+        cars = []
+    else:
+        cars = cars_temp
+    
+    if (notcars_temp == None):
+        notcars = []
+    else:
+        notcars = notcars_temp
+        
+    path = os.path.join(folders, file)
+    images = glob.glob(path)
+    for image in images:
+        if 'image' in image or 'extra' in image:
+            notcars.append(image)
+        else:
+            cars.append(image)
+    return cars, notcars
+
+def read_images2(folders, file, list_temp = None):
+    if (list_temp == None):
+        list_1 = []
+    else:
+        list_1 = list_temp
+          
+    path = os.path.join(folders, file)
+    images = glob.glob(path)
+    for image in images:
+        list_1.append(image)
+        
+    return list_1
+
 
 def get_hog_features(img, orient, pix_per_cell, cell_per_block, 
                         vis=False, feature_vec=True):
@@ -53,64 +89,56 @@ def color_hist(img, nbins=32):    #bins_range=(0, 256)
 
 # Define a function to extract features from a list of images
 # Have this function call bin_spatial() and color_hist()
-def extract_features(imgs, cspace='RGB', orient=9, 
-                        pix_per_cell=8, cell_per_block=2, hog_channel=0):
+def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
+                        hist_bins=32, orient=9, 
+                        pix_per_cell=8, cell_per_block=2, hog_channel=0,
+                        spatial_feat=True, hist_feat=True, hog_feat=True):
     # Create a list to append feature vectors to
     features = []
     # Iterate through the list of images
     for file in imgs:
+        file_features = []
         # Read in each one by one
         image = mpimg.imread(file)
         # apply color conversion if other than 'RGB'
-        if cspace != 'RGB':
-            if cspace == 'HSV':
+        if color_space != 'RGB':
+            if color_space == 'HSV':
                 feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-            elif cspace == 'LUV':
+            elif color_space == 'LUV':
                 feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
-            elif cspace == 'HLS':
+            elif color_space == 'HLS':
                 feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-            elif cspace == 'YUV':
+            elif color_space == 'YUV':
                 feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
-            elif cspace == 'YCrCb':
+            elif color_space == 'YCrCb':
                 feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
         else: feature_image = np.copy(image)      
 
+        if spatial_feat == True:
+            spatial_features = bin_spatial(feature_image, size=spatial_size)
+            file_features.append(spatial_features)
+        if hist_feat == True:
+            # Apply color_hist()
+            hist_features = color_hist(feature_image, nbins=hist_bins)
+            file_features.append(hist_features)
+        if hog_feat == True:
         # Call get_hog_features() with vis=False, feature_vec=True
-        if hog_channel == 'ALL':
-            hog_features = []
-            for channel in range(feature_image.shape[2]):
-                hog_features.append(get_hog_features(feature_image[:,:,channel], 
-                                    orient, pix_per_cell, cell_per_block, 
-                                    vis=False, feature_vec=True))
-            hog_features = np.ravel(hog_features)        
-        else:
-            hog_features = get_hog_features(feature_image[:,:,hog_channel], orient, 
-                        pix_per_cell, cell_per_block, vis=False, feature_vec=True)
-        # Append the new feature vector to the features list
-        features.append(hog_features)
+            if hog_channel == 'ALL':
+                hog_features = []
+                for channel in range(feature_image.shape[2]):
+                    hog_features.append(get_hog_features(feature_image[:,:,channel], 
+                                        orient, pix_per_cell, cell_per_block, 
+                                        vis=False, feature_vec=True))
+                hog_features = np.ravel(hog_features)        
+            else:
+                hog_features = get_hog_features(feature_image[:,:,hog_channel], orient, 
+                            pix_per_cell, cell_per_block, vis=False, feature_vec=True)
+            # Append the new feature vector to the features list
+            file_features.append(hog_features)
+        features.append(np.concatenate(file_features))
     # Return list of feature vectors
     return features
 
-
-def read_images(folders, file, cars_temp = None, notcars_temp = None):
-    if (cars_temp == None):
-        cars = []
-    else:
-        cars = cars_temp
-    
-    if (notcars_temp == None):
-        notcars = []
-    else:
-        notcars = notcars_temp
-        
-    path = os.path.join(folders, file)
-    images = glob.glob(path)
-    for image in images:
-        if 'image' in image or 'extra' in image:
-            notcars.append(image)
-        else:
-            cars.append(image)
-    return cars, notcars
 
 def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
     # Make a copy of the image
@@ -259,6 +287,13 @@ def apply_threshold(heatmap, threshold):
     # Return thresholded map
     return heatmap
 
+def apply_threshold2(heatmap, threshold, threshold2):
+    # Zero out pixels below the threshold
+    heatmap[heatmap <= threshold] = 0
+    heatmap[heatmap >= threshold2] = 0
+    # Return thresholded map
+    return heatmap
+
 def draw_labeled_bboxes(img, labels):
     # Iterate through all detected cars
     for car_number in range(1, labels[1]+1):
@@ -278,6 +313,17 @@ def test_data_loading():
     cars = []
     notcars = []
 
+    cars_temp, notcars_temp = read_images('KITTI_vehicles/', '*.png')
+
+    cars_temp = read_images2('GTI_MiddleClose/', '*.png', cars_temp)
+
+    cars_temp = read_images2('GTI_Right/', '*.png', cars_temp)
+
+    cars_temp = read_images2('GTI_Far/', '*.png', cars_temp)
+
+    cars_temp, notcars_temp = read_images('vehicles_smallset/cars1/', '*.jpeg', cars_temp, None)
+    cars_temp_2, notcars_temp_2 =read_images('non_vehicles_smallset/notcars1/','*.jpeg')
+    
     cars_temp, notcars_temp = read_images('vehicles_smallset/cars1/', '*.jpeg')
     cars_temp_2, notcars_temp_2 =read_images('non_vehicles_smallset/notcars1/','*.jpeg')
 
@@ -294,6 +340,8 @@ def test_data_loading():
 
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
     draw_img = np.copy(img)
+    
+    img = img.astype(np.float32)/255
     
     img_tosearch = img[ystart:ystop,:,:]
     #ctrans_tosearch = img_tosearch 
@@ -361,7 +409,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
                 win_draw = np.int(window*scale)
                 #bbox = ((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart))
                 cv2.rectangle(draw_img,(xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart),(0,0,255),6) 
-                #window_list.append(bbox)
+                window_list.append(((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart)))
                 # window_list.append(((xbox_left+xstart, ytop_draw+ystart),(xbox_left+win_draw+xstart,ytop_draw+win_draw+ystart)))
 
-    return draw_img
+    return draw_img, window_list
