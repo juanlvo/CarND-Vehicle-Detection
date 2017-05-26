@@ -345,8 +345,8 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
     img = img.astype(np.float32)/255
     
     img_tosearch = img[ystart:ystop,:,:]
-    #ctrans_tosearch = img_tosearch 
-    ctrans_tosearch = cv2.cvtColor(img_tosearch, cv2.COLOR_RGB2HSV);
+    ctrans_tosearch = img_tosearch 
+    #ctrans_tosearch = cv2.cvtColor(img_tosearch, cv2.COLOR_RGB2HSV);
     #cv2.cvtColor(img_tosearch, cv2.COLOR_RGB2YCrCb);
     if scale != 1:
         imshape = ctrans_tosearch.shape
