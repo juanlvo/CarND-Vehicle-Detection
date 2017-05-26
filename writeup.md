@@ -150,14 +150,14 @@ Was decided to check every window position all over the image and trying to dete
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
- 1. Train of the SVM <br \>
- ![alt text][image1] <br \>
- 2. Take an Image and check every window of the image <br \>
- ![alt text][image4] <br \>
- 3. Try to identify posible windows like in this image <br \>
- ![alt text][image5] <br \>
- 4. Check the heatmap of the windows in the image and draw the final boxes <br \>
- ![alt text][image5] <br \>
+ 1. Train of the SVM 
+ ![alt text][image1] 
+ 2. Take an Image and check every window of the image 
+ ![alt text][image4] 
+ 3. Try to identify posible windows like in this image 
+ ![alt text][image5] 
+ 4. Check the heatmap of the windows in the image and draw the final boxes 
+ ![alt text][image5] 
  
 ---
 
