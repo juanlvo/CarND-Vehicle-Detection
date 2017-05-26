@@ -117,17 +117,7 @@ The goals / steps of this project are the following:
 
 ####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
   
-The HOG feature is used in the extraction of the features, in vehicle_detection_videos.ipynb you can find the HOG parameter in the 5th box between lines 8 to 22, then after you can see the call of the function extract_features in lines 24 and 30, this function is located in lesson_function.py inside of the function you can find all the process related with HOG features, the parameters where choice with the recomendation of the lessons of Udacity so:
-			
-			- color_scape chose is YCrCb, the orientation.
-			- HOG orient = 9  
-			- HOG pix_per_cell = 8
-			- HOG cell_per_block = 2
-			- hog_channel = 'ALL'
-			- Number of histogram bins hist_bins = 64
-			- spatial_feat = True
-			- Histogram features hist_feat = True
-			- HOG features hog_feat = True
+The HOG feature is used in the extraction of the features, in vehicle_detection_videos.ipynb you can find the HOG parameter in the 5th box between lines 8 to 22, then after you can see the call of the function extract_features in lines 24 and 30, this function is located in lesson_function.py inside of the function you can find all the process related with HOG features, the parameters where choice with the recomendation of the lessons of Udacity so: color_space chose is YCrCb, the orientation HOG orient = 9, HOG pix_per_cell = 8, HOG cell_per_block = 2, hog_channel = 'ALL', Number of histogram bins hist_bins = 64, spatial_feat = True, Histogram features hist_feat = True, HOG features hog_feat = True
 
 I started by reading in all the `vehicle` and `non-vehicle` images in the box 5th line 1 with the call of the function test_data_loading 
 
