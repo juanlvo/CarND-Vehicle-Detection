@@ -74,7 +74,8 @@ The goals / steps of this project are the following:
 	</tr>
 	<tr>
 		<td>Show some examples of test images to demonstrate how your pipeline is working. How did you optimize the performance of your classifier?</td>
-		<td>In this case is clear the detection is not good enough, for improve is important to implement HOG Sub-sampling windows but for the author it was pretty difficult to implement this functionality due an error of the line test_features = X_scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1)) which never works and he should implement test_features = X_scaler.transform(np.hstack((hog_features)).reshape(1, -1)) but the result was pretty low, so at the end was better just to implement SVM due the waste of time. The images can be find below this rubrics</td>
+		<td>In this case is clear the detection is not good enough, for improve is important to implement HOG Sub-sampling windows but for the author it was pretty difficult to implement this functionality due an error of the line test_features = X_scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1)) which never works and he should implement test_features = X_scaler.transform(np.hstack((hog_features)).reshape(1, -1)) but the result was pretty low, so at the end was better just to implement SVM due the waste of time. The images can be find below this rubrics
+		<b>Update: after the changes from the first review now is working find_cars, but now is not detecting the black car and I don't have any idea how to improve it</b></td>
 	</tr>
 </table>
 
@@ -86,11 +87,11 @@ The goals / steps of this project are the following:
 	</tr>
 	<tr>
 		<td>Provide a link to your final video output. Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)</td>
-		<td>The sliding-window search plus classifier (only SVM) has been used to search for and identify vehicles in the videos provided. Video output has been generated with detected vehicle positions drawn bounding boxes. the video is <a href="video_p5.mp4">here</a></td>
+		<td>The sliding-window search plus classifier (only SVM) has been used to search for and identify vehicles in the videos provided. Video output has been generated with detected vehicle positions drawn bounding boxes. <b>Update: now is using SVM+HOG Sub sampling after the change of the reviewer</b> The video is <a href="video_p5.mp4">here</a></td>
 	</tr>
 	<tr>
 		<td>Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.</td>
-		<td>There is the implementation of heatmap you can find the function mix_heat_map_image in the 4th box, this function is recibing the boxes and then is representing one big box with a filter of number of boxes in the line 19 of the box 4th</td>
+		<td>There is the implementation of heatmap you can find the function mix_heat_map_image in the 4th box, this function is recibing the boxes and then is representing one big box with a filter of number of boxes in the line 19 of the box 4th <b>Update: it was implemented a new thershold in the function find_cars, located in lesson_function.py line 407 where you can see the calling of the function svc.decision_function with a thershold of 2.5, improving the detection of windows</b></td>
 	</tr>
 </table>
 
@@ -102,7 +103,7 @@ The goals / steps of this project are the following:
 	</tr>
 	<tr>
 		<td>Briefly discuss any problems / issues you faced in your implementation of this project. Where will your pipeline likely fail? What could you do to make it more robust?</td>
-		<td>The most difficult part was dettecting the problem in the function find_cars where in the execution of the line 403 of the lesson_function.py all the time was getting the error "ValueError: operands could not be broadcast together with shapes (1,5292) (8460,) (1,5292)" and after a lot of discussions in the slack chat he discover the line can work if he change for test_features = X_scaler.transform(np.hstack((hog_features)).reshape(1, -1)) this was quite complex to understan because the explanation was not enough to understand the function find_cars, even he read all the material several times he could not find where it came the problem, and this is the key for having a better detector of vehicles</td>
+		<td>The most difficult part was dettecting the problem in the function find_cars where in the execution of the line 403 of the lesson_function.py all the time was getting the error "ValueError: operands could not be broadcast together with shapes (1,5292) (8460,) (1,5292)" and after a lot of discussions in the slack chat he discover the line can work if he change for test_features = X_scaler.transform(np.hstack((hog_features)).reshape(1, -1)) this was quite complex to understan because the explanation was not enough to understand the function find_cars, even he read all the material several times he could not find where it came the problem, and this is the key for having a better detector of vehicles. <b>Update: finally is implemented the function find_cars, but is not detecting the black car in the video, but is improving with less false positives</b></td>
 	</tr>
 </table>
 
@@ -181,3 +182,4 @@ There is the implementation of heatmap you can find the function mix_heat_map_im
 
 The most difficult part was dettecting the problem in the function find_cars where in the execution of the line 403 of the lesson_function.py all the time was getting the error "ValueError: operands could not be broadcast together with shapes (1,5292) (8460,) (1,5292)" and after a lot of discussions in the slack chat he discover the line can work if he change for test_features = X_scaler.transform(np.hstack((hog_features)).reshape(1, -1)) this was quite complex to understan because the explanation was not enough to understand the function find_cars, even he read all the material several times he could not find where it came the problem, and this is the key for having a better detector of vehicles 
 
+<b>Update: It was implemented the changes from the last review, C=0.1, size=(16, 16), SVM decision function inside of the function find_cars line 407, It was not implemented the deque for the heatmap because in the detection of windows even whiout thershold, the black car never is detected by the windows, and to be honest I don't know how to improve this detection</b>

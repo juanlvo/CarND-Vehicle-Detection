@@ -51,6 +51,34 @@ def read_images2(folders, file, list_temp = None):
         
     return list_1
 
+def test_data_loading():
+    cars = []
+    notcars = []
+    cars_temp = []
+    notcars_temp = []
+
+    #cars_temp, notcars_temp = read_images('training/KITTI_vehicles/', '*.png')
+
+    #cars_temp = cars_temp + read_images2('training/GTI_MiddleClose/', '*.png', cars_temp)  
+
+    #cars_temp = cars_temp + read_images2('training/GTI_Right/', '*.png', cars_temp)  
+
+    #cars_temp = cars_temp + read_images2('training/GTI_Far/', '*.png', cars_temp)
+
+    cars_temp, notcars_temp = read_images('training/vehicles_smallset/cars1/', '*.jpeg', cars_temp, None)
+    cars_temp_2, notcars_temp_2 =read_images('training/non_vehicles_smallset/notcars1/','*.jpeg')  
+
+    cars_temp, notcars_temp = read_images('training/vehicles_smallset/cars2/', '*.jpeg', cars_temp, None)
+    cars_temp_2, notcars_temp_2 =read_images('training/non_vehicles_smallset/notcars2/','*.jpeg', None, notcars_temp_2)
+
+    cars_temp, notcars_temp = read_images('training/vehicles_smallset/cars3/', '*.jpeg', cars_temp, None)
+    cars_temp_2, notcars_temp_2 =read_images('training/non_vehicles_smallset/notcars3/','*.jpeg', None, notcars_temp_2)   
+    
+    cars = cars_temp
+    notcars = notcars_temp_2
+    
+    return cars, notcars
+
 
 def get_hog_features(img, orient, pix_per_cell, cell_per_block, 
                         vis=False, feature_vec=True):
@@ -310,44 +338,15 @@ def draw_labeled_bboxes(img, labels):
     # Return the image
     return img
 
-def test_data_loading():
-    cars = []
-    notcars = []
-
-    cars_temp, notcars_temp = read_images('KITTI_vehicles/', '*.png')
-
-    cars_temp = read_images2('GTI_MiddleClose/', '*.png', cars_temp)
-
-    cars_temp = read_images2('GTI_Right/', '*.png', cars_temp)
-
-    cars_temp = read_images2('GTI_Far/', '*.png', cars_temp)
-
-    cars_temp, notcars_temp = read_images('vehicles_smallset/cars1/', '*.jpeg', cars_temp, None)
-    cars_temp_2, notcars_temp_2 =read_images('non_vehicles_smallset/notcars1/','*.jpeg')
-    
-    cars_temp, notcars_temp = read_images('vehicles_smallset/cars1/', '*.jpeg')
-    cars_temp_2, notcars_temp_2 =read_images('non_vehicles_smallset/notcars1/','*.jpeg')
-
-    cars_temp, notcars_temp = read_images('vehicles_smallset/cars2/', '*.jpeg', cars_temp, None)
-    cars_temp_2, notcars_temp_2 =read_images('non_vehicles_smallset/notcars2/','*.jpeg', None, notcars_temp_2)
-
-    cars_temp, notcars_temp = read_images('vehicles_smallset/cars3/', '*.jpeg', cars_temp, None)
-    cars_temp_2, notcars_temp_2 =read_images('non_vehicles_smallset/notcars3/','*.jpeg', None, notcars_temp_2)
-    
-    cars = cars_temp
-    notcars = notcars_temp_2
-    
-    return cars, notcars
-
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
     draw_img = np.copy(img)
     
-    img = img.astype(np.float32)/255
+    #img = img.astype(np.float32)/255
     
     img_tosearch = img[ystart:ystop,:,:]
     ctrans_tosearch = img_tosearch 
     #ctrans_tosearch = cv2.cvtColor(img_tosearch, cv2.COLOR_RGB2HSV);
-    #cv2.cvtColor(img_tosearch, cv2.COLOR_RGB2YCrCb);
+    cv2.cvtColor(img_tosearch, cv2.COLOR_RGB2YCrCb);
     if scale != 1:
         imshape = ctrans_tosearch.shape
         ctrans_tosearch = cv2.resize(ctrans_tosearch, (np.int(imshape[1]/scale), np.int(imshape[0]/scale)))
@@ -399,18 +398,19 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
             #print('spatial_features ', spatial_features.shape)
             #print('hist_features ', hist_features.shape)
             #print('hog_features ',hog_features.shape)
-            #test_features = X_scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))                
-            test_features = X_scaler.transform(np.hstack((hog_features)).reshape(1, -1))    
+            test_features = X_scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))                
+            #test_features = X_scaler.transform(np.hstack((hog_features)).reshape(1, -1))    
             test_prediction = svc.predict(test_features)
             
             #when predict a car, draw it and add bounding box to list
-            if test_prediction == 1:
-                xbox_left = np.int(xleft*scale)
-                ytop_draw = np.int(ytop*scale)
-                win_draw = np.int(window*scale)
-                #bbox = ((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart))
-                cv2.rectangle(draw_img,(xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart),(0,0,255),6) 
-                window_list.append(((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart)))
-                # window_list.append(((xbox_left+xstart, ytop_draw+ystart),(xbox_left+win_draw+xstart,ytop_draw+win_draw+ystart)))
+            if (test_prediction == 1):
+                if(svc.decision_function(test_features) > 2.5 ):
+                    xbox_left = np.int(xleft*scale)
+                    ytop_draw = np.int(ytop*scale)
+                    win_draw = np.int(window*scale)
+                    #bbox = ((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart))
+                    cv2.rectangle(draw_img,(xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart),(0,0,255),6) 
+                    window_list.append(((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart)))
+                    # window_list.append(((xbox_left+xstart, ytop_draw+ystart),(xbox_left+win_draw+xstart,ytop_draw+win_draw+ystart)))
 
     return draw_img, window_list
