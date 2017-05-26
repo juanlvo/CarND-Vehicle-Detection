@@ -266,6 +266,7 @@ def search_windows(img, windows, clf, scaler, color_space='RGB',
         #6) Predict using your classifier
         prediction = clf.predict(test_features)
         #7) If positive (prediction == 1) then save the window
+        print(prediction)
         if prediction == 1:
             on_windows.append(window)
     #8) Return windows for positive detections
